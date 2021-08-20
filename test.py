@@ -6,9 +6,6 @@ import matplotlib.ticker as mticker
 from dataset.variables import STATES, YEARS, DATA
 
 
-def z_function(x, y):
-    return np.sin(np.sqrt(x ** 2 + y ** 2))
-
 fig = plt.figure()
 fig.set_size_inches(18.5, 10.5)
 ax = plt.axes(projection="3d")
