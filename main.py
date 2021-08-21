@@ -20,6 +20,7 @@ y = np.arange(len(YEARS))
 
 
 X_REAL, Y_REAL = np.meshgrid(x, y)
+# print("X_REA", X_REAL)
 Z_REAL = np.array(DATA)
 
 ax.plot_wireframe(X_REAL, Y_REAL, Z_REAL, color='green')
@@ -39,6 +40,7 @@ ax.set_zlabel('Total')
 x_np = np.array(x)
 y_np = np.array(y)
 
+
 def my_function_ga(x, y, m1, m2, m3, m4, m5, m6, de1, de2, de3, de4, de5, de6, p1, p2, p3, p4, p5, p6, p7, p8, p9, q1, q2, q3, q4, q5, q6, q7, q8, q9, r1, r2, r3, r4, r5, r6, r7, r8, r9):
     mf1 = []
     mf2 = []
@@ -52,7 +54,8 @@ def my_function_ga(x, y, m1, m2, m3, m4, m5, m6, de1, de2, de3, de4, de5, de6, p
     a = []
     b = []
 
-    z = []
+    ## CREATE ARRAY 2Dimensional
+    z = np.zeros(shape=(6, 6))
     for i in x:
         for j in y:
             a.insert(i, (i + 1) / 6) # This a is my virtual X
@@ -65,7 +68,6 @@ def my_function_ga(x, y, m1, m2, m3, m4, m5, m6, de1, de2, de3, de4, de5, de6, p
             mf4.insert(j, exp( (-(b[j] - m4) ** 2) / ( 2 * de4 ** 2)  ))
             mf5.insert(j, exp( (-(b[j] - m5) ** 2) / ( 2 * de5 ** 2)  ))
             mf6.insert(j, exp( (-(b[j] - m6) ** 2) / ( 2 * de6 ** 2)  ))
-
 
             inf1 = mf1[i] * mf4[j]
             inf2 = mf1[i] * mf5[j]
@@ -89,27 +91,38 @@ def my_function_ga(x, y, m1, m2, m3, m4, m5, m6, de1, de2, de3, de4, de5, de6, p
 
             d = inf1 + inf2 + inf3 + inf4 + inf5 + inf6 + inf7 + inf8 + inf9
             c = reg1 + reg2 + reg3 + reg4 + reg5 + reg6 + reg7 + reg8 + reg9
-            ## INSERT ARRAY 2Dimensional
-            print("hi", c / d)
-    return y
+            ## UPDATE ARRAY 2Dimensional
+            z[i][j] = c / d
+    print('-'*50)
+    #z = z.tolist()
+    print(z)
+    return z
 
 def ga_fun(p):
     #a, b, c, d, e, f, g, h, i, j, k, m = p
     m1, m2, m3, m4, m5, m6, de1, de2, de3, de4, de5, de6, p1, p2, p3, p4, p5, p6, p7, p8, p9, q1, q2, q3, q4, q5, q6, q7, q8, q9, r1, r2, r3, r4, r5, r6, r7, r8, r9 = p
     
-    residuals = np.float64(abs(my_function_ga(x_np, y_np, m1, m2, m3, m4, m5, m6, de1, de2, de3, de4, de5, de6, p1, p2, p3, p4, p5, p6, p7, p8, p9, q1, q2, q3, q4, q5, q6, q7, q8, q9, r1, r2, r3, r4, r5, r6, r7, r8, r9 ) - y_np)).sum()
+    #residuals = np.float64(abs(my_function_ga(x_np, y_np, m1, m2, m3, m4, m5, m6, de1, de2, de3, de4, de5, de6, p1, p2, p3, p4, p5, p6, p7, p8, p9, q1, q2, q3, q4, q5, q6, q7, q8, q9, r1, r2, r3, r4, r5, r6, r7, r8, r9 ) - y_np)).sum()
     #residuals = 0
-    return residuals
+    #return residuals
+    response = my_function_ga(x_np, y_np, m1, m2, m3, m4, m5, m6, de1, de2, de3, de4, de5, de6, p1, p2, p3, p4, p5, p6, p7, p8, p9, q1, q2, q3, q4, q5, q6, q7, q8, q9, r1, r2, r3, r4, r5, r6, r7, r8, r9 )
+    
+    return response
 
 
 
 
 generations = 1
 ga = GA(func=ga_fun, n_dim=39, size_pop=2, max_iter=generations, prob_mut=0.1,
-        lb=0, ub=20)
+        lb=150, ub=420)
 
 
 best_params, residuals = ga.run()
+
+
+print('best_x:', best_params, '\n', 'best_y:', residuals)
+print('LEN', len(best_params))
+print('TY', type(best_params))
 
 
 ax_ga.plot_wireframe(X_REAL, Y_REAL, Z_REAL, color='green')
