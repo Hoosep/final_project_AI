@@ -1,16 +1,36 @@
+from GA_CurveFit import PrintList
 from typing import Coroutine
 import numpy as np, random, operator, pandas as pd, sys, matplotlib.pyplot as plt, matplotlib.cm as cm, math, time
 from mpl_toolkits import mplot3d
 
 from mpl_toolkits.mplot3d import Axes3D
 
-POPULATION_SIZE = 1
+POPULATION_SIZE = 2000
 CROMOSOME_SIZE = 39
-tournamentSize = 5
+tournamentSize = 10
+ITERATIOS = 100
+STATES = ['Jalisco', 'Chihuahua', 'Sinaloa', 'Ciudad de Mexico', 'Michoacan', 'Nuevo Leon']
+YEARS = ['2014', '2015', '2016', '2017', '2018', '2019']
+DATA = [
+        [403, 284, 301, 316, 351, 291], # Jalisco
+        [235, 317, 286, 268, 270, 263], # Chihuahua
+        [234, 285, 255, 275, 278, 236], # Sinaloa
+        [291, 200, 220, 193, 223, 220], # Ciudad de Mexico
+        [298, 252, 286, 189, 171, 212], # Michoacan
+        [226, 202, 245, 223, 229, 204]  # Nuevo Leon
+        ]
+
 X = []
 Y = []
 Z = []
 parents = []
+
+def VerifyParent(arr):
+    for index in range(len(arr)):
+        if index == 6 or index == 7 or index == 8 or index == 9 or index == 10 or index == 11:
+            if arr[index] <5:
+                arr[index] = 5
+    return arr
 
 def CreatePopulation(parents):    
     for i in range(0, POPULATION_SIZE):
@@ -21,8 +41,8 @@ def CreatePopulation(parents):
         # print(len(cromosome))
         parents.append(cromosome)
         #Print adjusted values
-        for gen in cromosome:
-            print(gen/5)
+        # for gen in cromosome:
+        #     print(gen/5)
 
 def Mask_Number(value, n):
     return value & ((1 << n) - 1)
@@ -109,6 +129,7 @@ def Tournament(parents):
 
 def CalculateError(population):
     for cromosome in population:
+        cromosome = VerifyParent(cromosome)
         m1 = cromosome[0]/5
         m2 = cromosome[1]/5
         m3 = cromosome[2]/5
@@ -148,6 +169,41 @@ def CalculateError(population):
         r7 = cromosome[36]/5
         r8 = cromosome[37]/5
         r9 = cromosome[38]/5
+        error = 0
+
+        for i in range(0, len(STATES)):
+            for j in range(0, len(STATES)):
+                x=i/10
+                y=j/10
+                mf1=math.exp((-(x-m1)**2)/(2*de1**2))
+                mf2=math.exp((-(x-m2)**2)/(2*de2**2))
+                mf3=math.exp((-(x-m3)**2)/(2*de3**2))
+                mf4=math.exp((-(y-m4)**2)/(2*de4**2))
+                mf5=math.exp((-(y-m5)**2)/(2*de5**2))
+                mf6=math.exp((-(y-m6)**2)/(2*de6**2))
+                inf1=mf1*mf4
+                inf2=mf1*mf5
+                inf3=mf1*mf6
+                inf4=mf2*mf4
+                inf5=mf2*mf5
+                inf6=mf2*mf6
+                inf7=mf3*mf4
+                inf8=mf3*mf5
+                inf9=mf3*mf6
+                reg1=inf1*(p1*x+q1*y+r1)
+                reg2=inf2*(p2*x+q2*y+r2)
+                reg3=inf1*(p3*x+q3*y+r3)
+                reg4=inf1*(p4*x+q4*y+r4)
+                reg5=inf1*(p5*x+q5*y+r5)
+                reg6=inf1*(p6*x+q6*y+r6)
+                reg7=inf1*(p7*x+q7*y+r7)
+                reg8=inf1*(p8*x+q8*y+r8)
+                reg9=inf1*(p9*x+q9*y+r9)
+                b=inf1+inf2+inf3+inf4+inf5+inf6+inf7+inf8+inf9
+                a=reg1+reg2+reg3+reg4+reg5+reg6+reg7+reg8+reg9
+                z=a/b
+                error += (abs(z-DATA[i][j]))
+        cromosome.append(error)
 
 def CreateGraph():
     m1=0
@@ -235,8 +291,112 @@ def CreateGraph():
     ax.set_title('Surface plot')
     plt.show()
 
+def MutateCromosome(arr, probGen, probBit):
+    mutatedArray = []
+    mutatedArray = arr
+    mutatedIndexes = []
+    #print(array)
+    for mutated in range(0, probGen):
+        index = random.randint(0,len(arr) -2)
+        
+        if index not in mutatedIndexes:
+            # print("Index: ", index)
+            mutated += 1
+            bitIndexes =[]
+            mutatedIndexes.append(index)
+            #print("Gen: ", index)
+            for bit in range(0,probBit):
+                bitIndex = random.randint(0,7)
+                if bitIndex not in bitIndexes:
+                    bitIndexes.append(bitIndex)
+                    bit += 1
+                    # print("Bit: ", bitIndex)
+                    # print("Val:", arr[index])
+                    num = arr[index] ^ (1 << bitIndex)
+                    if num < 5:
+                        arr[index] = 5
+                    else:
+                        arr[index] = num
+    return arr
+
+def Mutate(arrs, probList, probGen, probBit):
+    arr= arrs
+    mutatedCromosomes = []
+    #Pick random cromosomes to mutate
+    for mutatedCromosome in range(0, probList):        
+        cromosome = random.randint(0,len(arr) -1)        
+        if cromosome not in mutatedCromosomes:
+            mutatedCromosomes.append(cromosome)
+            #print("Mutated cromosome: ", cromosome)
+            mutatedCromosome += 1
+            #print("Original: ", arr[cromosome])
+            arr[cromosome] = MutateCromosome(arr[cromosome], probGen, probBit)
+            #print("Mutated: ", arr[cromosome])
+    return arr
+
+def RemoveError(arr):
+    temp = []
+    for child in arr:
+        tempChild = []
+        for i in range(0,CROMOSOME_SIZE):
+            tempChild.append(child[i])
+        #print(tempChild, len(tempChild))
+        temp.append(tempChild)
+    return temp
+def Elitism(arr1,arr2):
+    temp = []
+    # print("Iteration")
+    for element in arr1:
+        temp.append(element)
+    for element in arr2:
+        temp.append(element)
+    temp.sort(key = lambda x: x[-1])
+    # print("Temp before cutting:")
+    # PrintList(temp)
+    temp = temp[:int(len(temp)/2)]
+    # print(len(temp[0]))
+    # print("Temp after cutting:")
+    # PrintList(temp)
+    # print(len(temp))
+    # PrintList(temp)
+    return temp
+
 def main():
     # CreateGraph()
+    parents = []
     CreatePopulation(parents)
+    CalculateError(parents)
+    # PrintList(parents)
+
+    for i in range(0, POPULATION_SIZE):
+        print("Iteration: ", i)
+        children = []
+        elite = []
+        for i in range(0,int(POPULATION_SIZE/2)):
+            
+            winner1, winner2 = Tournament(parents)
+            child1, child2 = Breed(winner1, winner2)
+            children.append(child1)
+            children.append(child2)
+            # print(len(children))
+        print(len(children))
+    #     # print("Children:")
+    #     #SortList(children)
+    #     # PrintList(children)
+        children = Mutate(children, 200,19,3)
+        children = RemoveError(children)
+        CalculateError(children)
+        
+        parents = Elitism(parents,children)
+    #     # parents = children
+    #     # print("Mutated Children:")
+    #     # SortList(children)
+    #     # PrintList(children)
+    #     #print(len(parents[0]))
+        print("Best from iteration: ", parents[0][-1])
+    #     best.append(parents[0])
+    #     TemperatureErrors.append(parents[0][-1])
+
+
 if __name__=="__main__":
     main()
