@@ -1,6 +1,7 @@
 from mpl_toolkits import mplot3d
 import numpy as np
 import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import axes3d
 import matplotlib.ticker as mticker
 from math import exp
 from sko.GA import GA
@@ -56,6 +57,10 @@ def my_function_ga(x, y, m1, m2, m3, m4, m5, m6, de1, de2, de3, de4, de5, de6, p
 
     ## CREATE ARRAY 2Dimensional
     z = np.zeros(shape=(6, 6))
+
+
+    rows, cols = (6, 6)
+    arr = [[0]*cols]*rows
     for i in x:
         for j in y:
             a.insert(i, (i + 1) / 6) # This a is my virtual X
@@ -92,28 +97,30 @@ def my_function_ga(x, y, m1, m2, m3, m4, m5, m6, de1, de2, de3, de4, de5, de6, p
             d = inf1 + inf2 + inf3 + inf4 + inf5 + inf6 + inf7 + inf8 + inf9
             c = reg1 + reg2 + reg3 + reg4 + reg5 + reg6 + reg7 + reg8 + reg9
             ## UPDATE ARRAY 2Dimensional
-            z[i][j] = c / d
-    print('-'*50)
+            arr[i][j] = int(c / d)
+    #print('-'*50)
     #z = z.tolist()
-    print(z)
-    return z
+    #print(z)
+    return arr
 
 def ga_fun(p):
     #a, b, c, d, e, f, g, h, i, j, k, m = p
     m1, m2, m3, m4, m5, m6, de1, de2, de3, de4, de5, de6, p1, p2, p3, p4, p5, p6, p7, p8, p9, q1, q2, q3, q4, q5, q6, q7, q8, q9, r1, r2, r3, r4, r5, r6, r7, r8, r9 = p
     
-    #residuals = np.float64(abs(my_function_ga(x_np, y_np, m1, m2, m3, m4, m5, m6, de1, de2, de3, de4, de5, de6, p1, p2, p3, p4, p5, p6, p7, p8, p9, q1, q2, q3, q4, q5, q6, q7, q8, q9, r1, r2, r3, r4, r5, r6, r7, r8, r9 ) - y_np)).sum()
+    residuals = np.float64(abs(my_function_ga(x_np, y_np, m1, m2, m3, m4, m5, m6, de1, de2, de3, de4, de5, de6, p1, p2, p3, p4, p5, p6, p7, p8, p9, q1, q2, q3, q4, q5, q6, q7, q8, q9, r1, r2, r3, r4, r5, r6, r7, r8, r9 ) - y_np)).sum()
     #residuals = 0
-    #return residuals
-    response = my_function_ga(x_np, y_np, m1, m2, m3, m4, m5, m6, de1, de2, de3, de4, de5, de6, p1, p2, p3, p4, p5, p6, p7, p8, p9, q1, q2, q3, q4, q5, q6, q7, q8, q9, r1, r2, r3, r4, r5, r6, r7, r8, r9 )
+    return residuals
+    #response = my_function_ga(x_np, y_np, m1, m2, m3, m4, m5, m6, de1, de2, de3, de4, de5, de6, p1, p2, p3, p4, p5, p6, p7, p8, p9, q1, q2, q3, q4, q5, q6, q7, q8, q9, r1, r2, r3, r4, r5, r6, r7, r8, r9 )
+
+    #response = 0
     
-    return response
+    #return response
 
 
 
 
-generations = 1
-ga = GA(func=ga_fun, n_dim=39, size_pop=2, max_iter=generations, prob_mut=0.1,
+generations = 5
+ga = GA(func=ga_fun, n_dim=39, size_pop=2, max_iter=generations, prob_mut=0.001,
         lb=150, ub=420)
 
 
@@ -121,11 +128,71 @@ best_params, residuals = ga.run()
 
 
 print('best_x:', best_params, '\n', 'best_y:', residuals)
-print('LEN', len(best_params))
-print('TY', type(best_params))
+#print('LEN', len(best_params))
+#print('TY', type(best_params))
+
+## THIS IS GONNA BE MY TEST
+
+z_predict_best_params = my_function_ga(x_np, y_np, *best_params)
+
+z_predict_best_params = np.array(z_predict_best_params)
+print(DATA)
+print("-"*60)
+print(z_predict_best_params)
+
+ax_ga.plot_surface(X_REAL, Y_REAL, z_predict_best_params, rstride=1, cstride=1,
+                    cmap='winter', edgecolor='none')
+""" best_y_generation = ga.generation_best_Y
+best_x_generation = ga.generation_best_X
 
 
-ax_ga.plot_wireframe(X_REAL, Y_REAL, Z_REAL, color='green')
+for i in range(1, generations+1):
+
+    # FAKE
+    z_prediction_test = my_function_ga(x_np, y_np, *best_x_generation[i - 1])
+    #print(z_prediction_test)
+    z_prediction_test = np.array(z_prediction_test)
+    #print("X", type(z_prediction_test))
+
+    X_REAL_LOOP, Y_REAL_LOOP = np.meshgrid(x, y)
+    #print(X_REAL_LOOP)
+    #print(z_prediction_test)
+    #print("-"*50)
+    # ax_ga.plot_wireframe(X_REAL_LOOP, Y_REAL_LOOP, z_prediction_test, color='green')
+    ax_ga.plot_surface(X_REAL_LOOP, Y_REAL_LOOP, z_prediction_test, rstride=1, cstride=1,
+                    cmap='winter', edgecolor='none')
+
+    #ax_ga.set_xticks(range(len(STATES)))
+    #ax_ga.set_xticklabels(STATES)
+
+    #ax_ga.set_yticks(range(len(YEARS)))
+    #ax_ga.set_yticklabels(YEARS)
+
+
+    ax_ga.set_zlabel('Total')
+    
+    
+    #REAL
+    #ax.plot_wireframe(X_REAL, Y_REAL, Z_REAL, color='green')
+    #ax.plot_surface(X_REAL, Y_REAL, Z_REAL, rstride=1, cstride=1,
+    #                cmap='winter', edgecolor='none')
+
+    #ax.set_xticks(range(len(STATES)))
+    #ax.set_xticklabels(STATES)
+
+    #ax.set_yticks(range(len(YEARS)))
+    #ax.set_yticklabels(YEARS)
+
+
+    #ax.set_zlabel('Total')
+
+    plt.pause(5)
+    ax_ga.cla() """
+
+
+## FINISH TEST
+
+""" ax_ga.plot_wireframe(X_REAL, Y_REAL, Z_REAL, color='green')
 ax_ga.plot_surface(X_REAL, Y_REAL, Z_REAL, rstride=1, cstride=1,
                 cmap='winter', edgecolor='none')
 
@@ -136,5 +203,10 @@ ax_ga.set_yticks(range(len(YEARS)))
 ax_ga.set_yticklabels(YEARS)
 
 
-ax_ga.set_zlabel('Total')
-#plt.show()
+ax_ga.set_zlabel('Total') """
+
+#plt.pause(0.01)
+# ax_ga.cla()
+
+#plt.ioff()
+plt.show()
