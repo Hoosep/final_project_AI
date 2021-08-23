@@ -9,7 +9,7 @@ import matplotlib.ticker as mticker
 from dataset.variables import STATES, YEARS, DATA
 
 fig = plt.figure(figsize=(8, 20))
-#fig.set_size_inches(18.5, 10.5)
+fig.set_size_inches(18.5, 10.5)
 fig.suptitle('Accidentes Fatales 2014-2019', fontsize=20)
 
 ax = fig.add_subplot(2, 2, 1, projection='3d')
